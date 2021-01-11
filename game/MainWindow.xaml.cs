@@ -22,32 +22,44 @@ namespace game
     public partial class MainWindow : Window
     {
         private DispatcherTimer mainTimer;
+        // Таймер появления врагов
         private DispatcherTimer enemyTimer;
+        // Таймер стрельбы
         public DispatcherTimer shootTimer;
         private Hero hero;
         public MainWindow()
         {
             InitializeComponent();
+            
+            // Создание главного таймера
             mainTimer = new DispatcherTimer();
-            mainTimer.Interval = new TimeSpan(0, 0, 0, 0, 30);
+            mainTimer.Interval = new TimeSpan(0, 0, 0, 0, 25);
             mainTimer.Tick += new EventHandler(mainTimer_Tick);
             mainTimer.Start();
+
+            // Создание таймера врагов
+            enemyTimer = new DispatcherTimer();
+            enemyTimer.Interval = new TimeSpan(0, 0, Enemy.spawnDelay);
+            enemyTimer.Tick += new EventHandler(enemyTimer_Tick);
+            enemyTimer.Start();
+
+            // Создание таймера стрельбы
+            shootTimer = new DispatcherTimer();
+            shootTimer.Interval = new TimeSpan(0, 0, 0, 0, Hero.shootDelay);
+            shootTimer.Tick += new EventHandler(shootTimer_Tick);
+
+            // Настройка корабля героя
             hero = new Hero();
             hero.grid = heroGrid;
-            hero.mainWindow = mainWidow;
-            GameManager.mainWindow = mainWidow;
+            hero.shootTimer = shootTimer;
+
+            // Настройка GameManager-а
             GameManager.hero = hero;
             GameManager.enemies = new List<Enemy>();
             GameManager.destroyedEnemies = new List<Enemy>();
             GameManager.projectiles = new List<Projectile>();
             GameManager.destroyedProjectiles = new List<Projectile>();
-            enemyTimer = new DispatcherTimer();
-            enemyTimer.Interval = new TimeSpan(0, 0, Enemy.spawnDelay);
-            enemyTimer.Tick += new EventHandler(enemyTimer_Tick);
-            enemyTimer.Start();
-            shootTimer = new DispatcherTimer();
-            shootTimer.Interval = new TimeSpan(0, 0, 0, 0, Hero.shootDelay);
-            shootTimer.Tick += new EventHandler(shootTimer_Tick);
+            GameManager.mainWindow = mainWidow;
             GameManager.windowHeight = mainWidow.Height;
             GameManager.windowWidth = mainWidow.Width;
             GameManager.mainGrid = mainGrid;
@@ -70,15 +82,20 @@ namespace game
 
         private void mainWidow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            // Изменение параметров окна в GameManager-е
             GameManager.windowHeight = mainWidow.ActualHeight;
             GameManager.windowWidth = mainWidow.ActualWidth;
         }
-
+        /// <summary>
+        /// Завершение игры
+        /// </summary>
         public void EndGame()
         {
+            // Уведомлние о результате
             MessageBoxResult result = MessageBox.Show("Врагов сбито: " + GameManager.points + "\nСыграть ещё?", "Игра окончена" ,MessageBoxButton.YesNo);
             if (result == MessageBoxResult.Yes)
             {
+                // Перезапуск всех таймеров
                 mainTimer.Stop();
                 enemyTimer.Stop();
                 shootTimer.Stop();
